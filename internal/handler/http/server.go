@@ -5,8 +5,8 @@ import (
 
 	"github.com/Fiagram/gateway/internal/configs"
 	oapi "github.com/Fiagram/gateway/internal/generated/openapi"
+	"github.com/Fiagram/gateway/internal/log"
 	logic "github.com/Fiagram/gateway/internal/logic/http"
-	"github.com/Fiagram/gateway/internal/utils"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
@@ -15,7 +15,7 @@ type HttpServer interface {
 	Start(ctx context.Context) error
 }
 
-type server struct {
+type httpServer struct {
 	httpConfig configs.Http
 	oapiLogic  logic.OapiLogic
 	logger     *zap.Logger
@@ -26,15 +26,15 @@ func NewHttpServer(
 	oapiLogic logic.OapiLogic,
 	logger *zap.Logger,
 ) HttpServer {
-	return &server{
+	return &httpServer{
 		httpConfig: httpConfig,
 		oapiLogic:  oapiLogic,
 		logger:     logger,
 	}
 }
 
-func (s server) Start(ctx context.Context) error {
-	logger := utils.LoggerWithContext(ctx, s.logger)
+func (s httpServer) Start(ctx context.Context) error {
+	logger := log.LoggerWithContext(ctx, s.logger)
 
 	r := gin.Default()
 	apiV1 := r.Group("/api/v1")

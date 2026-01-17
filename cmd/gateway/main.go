@@ -1,15 +1,13 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
 
+	"github.com/Fiagram/gateway/internal/app"
 	"github.com/Fiagram/gateway/internal/configs"
-	handler "github.com/Fiagram/gateway/internal/handler/http"
-	logic "github.com/Fiagram/gateway/internal/logic/http"
-	"github.com/Fiagram/gateway/internal/utils"
 	"github.com/spf13/cobra"
+	"go.uber.org/fx"
 )
 
 var (
@@ -26,23 +24,10 @@ func main() {
 		Long:    "Gateway is a microservice for managing accounts belongs to Fiagram project.",
 		Version: fmt.Sprintf("%s \ncommit: %s", version, commitHash),
 		RunE: func(cmd *cobra.Command, _ []string) error {
-
-			cfg, err := configs.NewConfig("")
-			if err != nil {
-				log.Panic("Failed to read the config file")
-			}
-
-			logger, cleanup, err := utils.InitializeLogger(cfg.Log)
-			defer cleanup()
-
-			oapiLogic := logic.NewOapiLogic(logger)
-
-			httpHandler := handler.NewHttpServer(
-				cfg.Http,
-				oapiLogic,
-				logger,
-			)
-			httpHandler.Start(context.Background())
+			fx.New(
+				fx.Supply(configs.ConfigFilePath(configFilePath)),
+				app.Module,
+			).Run()
 
 			return nil
 		},

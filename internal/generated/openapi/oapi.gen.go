@@ -16,11 +16,6 @@ const (
 	BearerAuthScopes = "bearerAuth.Scopes"
 )
 
-// Defines values for AccessTokenResponseTokenType.
-const (
-	Bearer AccessTokenResponseTokenType = "Bearer"
-)
-
 // Defines values for Role.
 const (
 	Admin  Role = "admin"
@@ -31,13 +26,9 @@ const (
 // AccessTokenResponse defines model for AccessTokenResponse.
 type AccessTokenResponse struct {
 	// AccessToken JWT access token (store in memory; avoid localStorage if possible)
-	AccessToken string                       `json:"accessToken"`
-	ExpiresIn   int                          `json:"expiresIn"`
-	TokenType   AccessTokenResponseTokenType `json:"tokenType"`
+	AccessToken string `json:"accessToken"`
+	ExpiresIn   int    `json:"expiresIn"`
 }
-
-// AccessTokenResponseTokenType defines model for AccessTokenResponse.TokenType.
-type AccessTokenResponseTokenType string
 
 // Account defines model for Account.
 type Account struct {
@@ -135,6 +126,9 @@ type N401Unauthorized = ErrorResponse
 
 // N403Forbidden defines model for 403_Forbidden.
 type N403Forbidden = ErrorResponse
+
+// N404NotFound defines model for 404_NotFound.
+type N404NotFound = ErrorResponse
 
 // N429TooManyRequests defines model for 429_TooManyRequests.
 type N429TooManyRequests = ErrorResponse

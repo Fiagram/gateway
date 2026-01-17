@@ -45,7 +45,6 @@ func (o oapiLogic) SignUp(c *gin.Context) {
 		AccessToken: oapi.AccessTokenResponse{
 			AccessToken: "DXMDKGLA42K21SKHV",
 			ExpiresIn:   9000,
-			TokenType:   oapi.Bearer,
 		},
 		Username: "thaivd",
 	}

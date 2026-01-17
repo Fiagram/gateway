@@ -8,6 +8,8 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+type ConfigFilePath string
+
 type Config struct {
 	Http Http `yaml:"http"`
 	Auth Auth `yaml:"auth"`
@@ -16,7 +18,7 @@ type Config struct {
 
 // Creates a new config instance by reading from a given YAML file.
 // If the filePath is empty, it uses the default embedded configuration.
-func NewConfig(filePath string) (Config, error) {
+func NewConfig(filePath ConfigFilePath) (Config, error) {
 	var (
 		configBytes = configs.DefaultConfigBytes
 		config      = Config{}
@@ -24,7 +26,7 @@ func NewConfig(filePath string) (Config, error) {
 	)
 
 	if filePath != "" {
-		configBytes, err = os.ReadFile(filePath)
+		configBytes, err = os.ReadFile(string(filePath))
 		if err != nil {
 			return Config{}, fmt.Errorf("Failed to read YAML file: %w", err)
 		}
@@ -36,4 +38,12 @@ func NewConfig(filePath string) (Config, error) {
 	}
 
 	return config, nil
+}
+
+func GetConfigHttp(c Config) Http {
+	return c.Http
+}
+
+func GetConfigLog(c Config) Log {
+	return c.Log
 }
