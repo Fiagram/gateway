@@ -15,6 +15,7 @@ type Config struct {
 	Auth  Auth  `yaml:"auth"`
 	Log   Log   `yaml:"log"`
 	Cache Cache `yaml:"cache"`
+	Grpc  Grpc  `yaml:"grpc"`
 }
 
 // Creates a new config instance by reading from a given YAML file.

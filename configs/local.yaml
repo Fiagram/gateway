@@ -2,6 +2,11 @@ http:
   address: 0.0.0.0
   port: 8080
 
+grpc:
+  account_service:
+    address: 127.0.0.1
+    port: 11001
+
 cache:
   type: redis
   address: 127.0.0.1

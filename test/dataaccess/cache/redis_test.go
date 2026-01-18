@@ -5,18 +5,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Fiagram/gateway/internal/dataaccess/cache"
 	"github.com/stretchr/testify/require"
 )
 
 func TestRedisSetAndGet(t *testing.T) {
-	client, err := cache.NewClient(config, logger)
-	require.NoError(t, err)
+
 	ctx := context.Background()
 
 	key := "key9"
 	expected := "value9"
-	err = client.Set(ctx, key, expected, 1*time.Second)
+	err := client.Set(ctx, key, expected, 1*time.Second)
 	require.NoError(t, err)
 
 	actual, err := client.Get(ctx, key)
@@ -25,13 +23,11 @@ func TestRedisSetAndGet(t *testing.T) {
 }
 
 func TestRedisDel(t *testing.T) {
-	client, err := cache.NewClient(config, logger)
-	require.NoError(t, err)
 	ctx := context.Background()
 
 	key := "key9f"
 	expected := "sdsd"
-	err = client.Set(ctx, key, expected, 0)
+	err := client.Set(ctx, key, expected, 0)
 	require.NoError(t, err)
 
 	err = client.Del(ctx, key)
@@ -42,12 +38,10 @@ func TestRedisDel(t *testing.T) {
 }
 
 func TestAddToSet(t *testing.T) {
-	client, err := cache.NewClient(config, logger)
-	require.NoError(t, err)
 	ctx := context.Background()
 
 	key := "key38"
-	err = client.AddToSet(ctx, key, "v1", "v2", "v3")
+	err := client.AddToSet(ctx, key, "v1", "v2", "v3")
 	require.NoError(t, err)
 
 	isTrue, err := client.IsDataInSet(ctx, key, "v3")

@@ -14,11 +14,11 @@ init:
 
 .PHONY: generate
 generate:
-# 	@echo "--- Generating protobuf stubs ---"
-# 	@protoc -I=. \
-# 	--go_out=internal/generated \
-# 	--go-grpc_out=internal/generated \
-# 	api/account_service/*.proto
+	@echo "--- Generating protobuf stubs ---"
+	@protoc -I=. \
+	--go_out=internal/generated \
+	--go-grpc_out=internal/generated \
+	api/account_service/*.proto
 	@echo "--- Generating OpenAPI server and types ---"
 	@go tool oapi-codegen --config=oapi_codegen.yml docs/openapi.yml
 
@@ -102,7 +102,8 @@ vendor:
 
 .PHONY: test
 test:
-	go test -v ./test/dataaccess/cache/
+	go test -v ./test/dataaccess/cache/ \
+			./test/dataaccess/account_service
 
 .PHONY: lint
 lint:

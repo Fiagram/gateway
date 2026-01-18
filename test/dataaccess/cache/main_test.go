@@ -6,22 +6,26 @@ import (
 	"testing"
 
 	"github.com/Fiagram/gateway/internal/configs"
+	"github.com/Fiagram/gateway/internal/dataaccess/cache"
 	"go.uber.org/zap"
 )
 
-var config configs.Cache
-var logger *zap.Logger
+var client cache.Client
 
 func TestMain(m *testing.M) {
 	// Use the default config to test database connection
-	cfg, err := configs.NewConfig("")
+	config, err := configs.NewConfig("")
 	if err != nil {
 		log.Fatal("failed to init config default")
 	}
 
-	config = cfg.Cache
-	config.Type = configs.CacheTypeRedis
-	logger = zap.NewNop()
+	config.Cache.Type = configs.CacheTypeRedis
+	logger := zap.NewNop()
+
+	client, err = cache.NewClient(config.Cache, logger)
+	if err != nil {
+		log.Fatal("failed to init redis cache")
+	}
 
 	os.Exit(m.Run())
 }
