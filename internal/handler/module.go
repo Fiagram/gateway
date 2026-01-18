@@ -24,18 +24,6 @@ var Module = fx.Module(
 					fmt.Println("Stopping server")
 					return nil
 				},
-
-				// logger, cleanup, err := utils.InitializeLogger(cfg.Log)
-				// defer cleanup()
-
-				// oapiLogic := logic.NewOapiLogic(logger)
-
-				// httpHandler := handler.NewHttpServer(
-				// 	cfg.Http,
-				// 	oapiLogic,
-				// 	logger,
-				// )
-				// httpHandler.Start(context.Background())
 			})
 		},
 	),

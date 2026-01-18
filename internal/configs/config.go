@@ -11,9 +11,10 @@ import (
 type ConfigFilePath string
 
 type Config struct {
-	Http Http `yaml:"http"`
-	Auth Auth `yaml:"auth"`
-	Log  Log  `yaml:"log"`
+	Http  Http  `yaml:"http"`
+	Auth  Auth  `yaml:"auth"`
+	Log   Log   `yaml:"log"`
+	Cache Cache `yaml:"cache"`
 }
 
 // Creates a new config instance by reading from a given YAML file.
@@ -46,4 +47,8 @@ func GetConfigHttp(c Config) Http {
 
 func GetConfigLog(c Config) Log {
 	return c.Log
+}
+
+func GetConfigCache(c Config) Cache {
+	return c.Cache
 }
