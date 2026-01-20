@@ -1,4 +1,4 @@
-package account_dao_test
+package account_grpc_test
 
 import (
 	"log"
@@ -6,11 +6,11 @@ import (
 	"testing"
 
 	"github.com/Fiagram/gateway/internal/configs"
-	account_dao "github.com/Fiagram/gateway/internal/dataaccess/account_service"
+	account_grpc "github.com/Fiagram/gateway/internal/dataaccess/account_service"
 	"go.uber.org/zap"
 )
 
-var client account_dao.Client
+var client account_grpc.Client
 
 func TestMain(m *testing.M) {
 	// Use the default config to test database connection
@@ -19,7 +19,7 @@ func TestMain(m *testing.M) {
 		log.Fatal("failed to init config default")
 	}
 
-	client, err = account_dao.NewClient(
+	client, err = account_grpc.NewClient(
 		cfg.Grpc.AccountService,
 		zap.NewNop(),
 	)
@@ -31,7 +31,7 @@ func TestMain(m *testing.M) {
 
 	// Clean up
 	if err := client.Close(); err != nil {
-		log.Printf("failed to close account_dao client: %v", err)
+		log.Printf("failed to close account_grpc client: %v", err)
 	}
 
 	os.Exit(code)

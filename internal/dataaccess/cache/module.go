@@ -8,5 +8,6 @@ var Module = fx.Module(
 	"cache",
 	fx.Provide(
 		NewClient,
+		NewUsernamesTaken,
 	),
 )

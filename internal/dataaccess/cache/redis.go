@@ -43,7 +43,7 @@ type redisClient struct {
 	logger       *zap.Logger
 }
 
-func (c redisClient) AddToSet(ctx context.Context, key string, data ...any) error {
+func (c *redisClient) AddToSet(ctx context.Context, key string, data ...any) error {
 	logger := log.LoggerWithContext(ctx, c.logger).
 		With(zap.String("key", key)).
 		With(zap.Any("data", data))
@@ -56,7 +56,7 @@ func (c redisClient) AddToSet(ctx context.Context, key string, data ...any) erro
 	return nil
 }
 
-func (c redisClient) Get(ctx context.Context, key string) (any, error) {
+func (c *redisClient) Get(ctx context.Context, key string) (any, error) {
 	logger := log.LoggerWithContext(ctx, c.logger).
 		With(zap.String("key", key))
 
@@ -73,7 +73,7 @@ func (c redisClient) Get(ctx context.Context, key string) (any, error) {
 	return data, nil
 }
 
-func (c redisClient) IsDataInSet(ctx context.Context, key string, data any) (bool, error) {
+func (c *redisClient) IsDataInSet(ctx context.Context, key string, data any) (bool, error) {
 	logger := log.LoggerWithContext(ctx, c.logger).
 		With(zap.String("key", key)).
 		With(zap.Any("data", data))
@@ -87,7 +87,7 @@ func (c redisClient) IsDataInSet(ctx context.Context, key string, data any) (boo
 	return result, nil
 }
 
-func (c redisClient) Set(ctx context.Context, key string, data any, ttl time.Duration) error {
+func (c *redisClient) Set(ctx context.Context, key string, data any, ttl time.Duration) error {
 	logger := log.LoggerWithContext(ctx, c.logger).
 		With(zap.String("key", key)).
 		With(zap.Any("data", data)).
@@ -102,7 +102,7 @@ func (c redisClient) Set(ctx context.Context, key string, data any, ttl time.Dur
 	return nil
 }
 
-func (c redisClient) Del(ctx context.Context, key ...string) error {
+func (c *redisClient) Del(ctx context.Context, key ...string) error {
 	logger := log.LoggerWithContext(ctx, c.logger).
 		With(zap.Any("keys", key))
 

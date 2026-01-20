@@ -1,11 +1,11 @@
-package account_dao
+package account_grpc
 
 import (
 	"go.uber.org/fx"
 )
 
 var Module = fx.Module(
-	"account_dao",
+	"account_grpc",
 	fx.Provide(
 		NewClient,
 	),

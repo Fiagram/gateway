@@ -50,9 +50,9 @@ paths:
               schema:
                 $ref: "#/components/schemas/SignupResponse"
 
-        "500": { $ref: "#/components/responses/500_InternalServerError" }
-        "400": { $ref: "#/components/responses/400_BadRequest" }
-        "404": { $ref: "#/components/responses/404_NotFound" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
 
   /auth/signin:
     post:
@@ -81,10 +81,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SigninResponse"
-        "400": { $ref: "#/components/responses/400_BadRequest" }
-        "401": { $ref: "#/components/responses/401_Unauthorized" }
-        "429": { $ref: "#/components/responses/429_TooManyRequests" }
-        "404": { $ref: "#/components/responses/404_NotFound" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "404": { $ref: "#/components/responses/NotFound" }
 
   /auth/refresh:
     post:
@@ -114,9 +114,9 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/RefreshResponse"
-        "400": { $ref: "#/components/responses/400_BadRequest" }
-        "401": { $ref: "#/components/responses/401_Unauthorized" }
-        "404": { $ref: "#/components/responses/404_NotFound" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
 
   /auth/signout:
     post:
@@ -144,9 +144,9 @@ paths:
       responses:
         "204":
           description: Signed out successfully
-        "400": { $ref: "#/components/responses/400_BadRequest" }
-        "401": { $ref: "#/components/responses/401_Unauthorized" }
-        "404": { $ref: "#/components/responses/404_NotFound" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
 
   # -------------------------------- Users
   /users/me:
@@ -163,9 +163,9 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UsersMeResponse"
-        "401": { $ref: "#/components/responses/401_Unauthorized" }
-        "403": { $ref: "#/components/responses/403_Forbidden" }
-        "404": { $ref: "#/components/responses/404_NotFound" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
 components:
   securitySchemes:
     bearerAuth:
@@ -197,41 +197,41 @@ components:
 
   responses:
     # Ref: https://restfulapi.net/http-status-codes/
-    500_InternalServerError:
+    InternalServerError:
       description: Internal Server Error
       content:
         application/json:
           schema:
             $ref: "#/components/schemas/ErrorResponse"
-    400_BadRequest:
+    BadRequest:
       description: Bad request
       content:
         application/json:
           schema:
             $ref: "#/components/schemas/ErrorResponse"
 
-    401_Unauthorized:
+    Unauthorized:
       description: Missing or invalid authentication
       content:
         application/json:
           schema:
             $ref: "#/components/schemas/ErrorResponse"
 
-    403_Forbidden:
+    Forbidden:
       description: Missing or invalid authentication
       content:
         application/json:
           schema:
             $ref: "#/components/schemas/ErrorResponse"
 
-    429_TooManyRequests:
+    TooManyRequests:
       description: Sent too many request
       content:
         application/json:
           schema:
             $ref: "#/components/schemas/ErrorResponse"
 
-    404_NotFound:
+    NotFound:
       description: Resource not found
       content:
         application/json:
@@ -243,22 +243,17 @@ components:
     ErrorResponse:
       type: object
       additionalProperties: false
-      required: [error]
+      required: [code, message]
       properties:
-        error:
+        code:
+          type: string
+          example: UNAUTHORIZED
+        message:
+          type: string
+          example: Unauthorized
+        details:
           type: object
-          additionalProperties: false
-          required: [code, message]
-          properties:
-            code:
-              type: string
-              example: UNAUTHORIZED
-            message:
-              type: string
-              example: Unauthorized
-            details:
-              type: object
-              additionalProperties: true
+          additionalProperties: true
 
     Password:
       type: string
@@ -285,7 +280,7 @@ components:
 
     Email:
       type: string
-      format: email
+      pattern: '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'
       example: user1@example.com
 
     PhoneNumber:
@@ -312,12 +307,10 @@ components:
 
     Account:
       type: object
-      required: [username, password, email, role, fullname]
+      required: [username, email, role, fullname]
       properties:
         username:
           $ref: "#/components/schemas/Username"
-        password:
-          $ref: "#/components/schemas/Password"
         fullname:
           $ref: "#/components/schemas/Fullname"
         email:
@@ -329,10 +322,12 @@ components:
 
     SignupRequest:
       type: object
-      required: [account]
+      required: [account, password]
       properties:
         account:
           $ref: "#/components/schemas/Account"
+        password:
+          $ref: "#/components/schemas/Password"
 
     AccessTokenResponse:
       type: object
@@ -355,8 +350,6 @@ components:
       properties:
         username:
           $ref: "#/components/schemas/Username"
-        accessToken:
-          $ref: "#/components/schemas/AccessTokenResponse"
 
     SigninRequest:
       type: object

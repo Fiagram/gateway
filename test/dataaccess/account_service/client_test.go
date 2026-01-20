@@ -1,4 +1,4 @@
-package account_dao_test
+package account_grpc_test
 
 import (
 	"context"

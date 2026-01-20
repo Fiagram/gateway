@@ -1,4 +1,4 @@
-package account_dao
+package account_grpc
 
 import (
 	"context"
@@ -15,6 +15,7 @@ import (
 type Client interface {
 	CreateAccount(ctx context.Context, req *pb.CreateAccountRequest) (*pb.CreateAccountResponse, error)
 	CheckAccountValid(ctx context.Context, req *pb.CheckAccountValidRequest) (*pb.CheckAccountValidResponse, error)
+	IsUsernameTaken(ctx context.Context, in *pb.IsUsernameTakenRequest) (*pb.IsUsernameTakenResponse, error)
 	GetAccount(ctx context.Context, req *pb.GetAccountRequest) (*pb.GetAccountResponse, error)
 	GetAccountAll(ctx context.Context, req *pb.GetAccountAllRequest) (*pb.GetAccountAllResponse, error)
 	GetAccountList(ctx context.Context, req *pb.GetAccountListRequest) (*pb.GetAccountListResponse, error)
@@ -50,42 +51,38 @@ func NewClient(
 	}, nil
 }
 
-// CreateAccount creates a new account
 func (c *client) CreateAccount(ctx context.Context, req *pb.CreateAccountRequest) (*pb.CreateAccountResponse, error) {
 	return c.stub.CreateAccount(ctx, req)
 }
 
-// CheckAccountValid validates account credentials
 func (c *client) CheckAccountValid(ctx context.Context, req *pb.CheckAccountValidRequest) (*pb.CheckAccountValidResponse, error) {
 	return c.stub.CheckAccountValid(ctx, req)
 }
 
-// GetAccount retrieves a single account by ID
+func (c *client) IsUsernameTaken(ctx context.Context, req *pb.IsUsernameTakenRequest) (*pb.IsUsernameTakenResponse, error) {
+	return c.stub.IsUsernameTaken(ctx, req)
+}
+
 func (c *client) GetAccount(ctx context.Context, req *pb.GetAccountRequest) (*pb.GetAccountResponse, error) {
 	return c.stub.GetAccount(ctx, req)
 }
 
-// GetAccountAll retrieves all accounts
 func (c *client) GetAccountAll(ctx context.Context, req *pb.GetAccountAllRequest) (*pb.GetAccountAllResponse, error) {
 	return c.stub.GetAccountAll(ctx, req)
 }
 
-// GetAccountList retrieves a list of accounts by IDs
 func (c *client) GetAccountList(ctx context.Context, req *pb.GetAccountListRequest) (*pb.GetAccountListResponse, error) {
 	return c.stub.GetAccountList(ctx, req)
 }
 
-// UpdateAccount updates an existing account
 func (c *client) UpdateAccount(ctx context.Context, req *pb.UpdateAccountRequest) (*pb.UpdateAccountResponse, error) {
 	return c.stub.UpdateAccount(ctx, req)
 }
 
-// DeleteAccount deletes an account
 func (c *client) DeleteAccount(ctx context.Context, req *pb.DeleteAccountRequest) (*pb.DeleteAccountResponse, error) {
 	return c.stub.DeleteAccount(ctx, req)
 }
 
-// Close closes the gRPC connection
 func (c *client) Close() error {
 	return c.conn.Close()
 }

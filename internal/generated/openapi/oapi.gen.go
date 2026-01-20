@@ -9,7 +9,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/oapi-codegen/runtime"
-	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
 const (
@@ -35,9 +34,6 @@ type Account struct {
 	Email    Email    `json:"email"`
 	Fullname Fullname `json:"fullname"`
 
-	// Password 8-72 characters, including at least one uppercase, one lowercase, one digit, and one special character; no whitespace.
-	Password *Password `json:"password,omitempty"`
-
 	// PhoneNumber Abide by the E.164 standard
 	PhoneNumber *PhoneNumber `json:"phoneNumber,omitempty"`
 	Role        Role         `json:"role"`
@@ -45,15 +41,13 @@ type Account struct {
 }
 
 // Email defines model for Email.
-type Email = openapi_types.Email
+type Email = string
 
 // ErrorResponse defines model for ErrorResponse.
 type ErrorResponse struct {
-	Error struct {
-		Code    string                  `json:"code"`
-		Details *map[string]interface{} `json:"details,omitempty"`
-		Message string                  `json:"message"`
-	} `json:"error"`
+	Code    string                  `json:"code"`
+	Details *map[string]interface{} `json:"details,omitempty"`
+	Message string                  `json:"message"`
 }
 
 // Fullname defines model for Fullname.
@@ -102,12 +96,14 @@ type SignoutRequest struct {
 // SignupRequest defines model for SignupRequest.
 type SignupRequest struct {
 	Account Account `json:"account"`
+
+	// Password 8-72 characters, including at least one uppercase, one lowercase, one digit, and one special character; no whitespace.
+	Password *Password `json:"password,omitempty"`
 }
 
 // SignupResponse defines model for SignupResponse.
 type SignupResponse struct {
-	AccessToken AccessTokenResponse `json:"accessToken"`
-	Username    Username            `json:"username"`
+	Username Username `json:"username"`
 }
 
 // Username defines model for Username.
@@ -118,23 +114,23 @@ type UsersMeResponse struct {
 	Account Account `json:"account"`
 }
 
-// N400BadRequest defines model for 400_BadRequest.
-type N400BadRequest = ErrorResponse
+// BadRequest defines model for BadRequest.
+type BadRequest = ErrorResponse
 
-// N401Unauthorized defines model for 401_Unauthorized.
-type N401Unauthorized = ErrorResponse
+// Forbidden defines model for Forbidden.
+type Forbidden = ErrorResponse
 
-// N403Forbidden defines model for 403_Forbidden.
-type N403Forbidden = ErrorResponse
+// InternalServerError defines model for InternalServerError.
+type InternalServerError = ErrorResponse
 
-// N404NotFound defines model for 404_NotFound.
-type N404NotFound = ErrorResponse
+// NotFound defines model for NotFound.
+type NotFound = ErrorResponse
 
-// N429TooManyRequests defines model for 429_TooManyRequests.
-type N429TooManyRequests = ErrorResponse
+// TooManyRequests defines model for TooManyRequests.
+type TooManyRequests = ErrorResponse
 
-// N500InternalServerError defines model for 500_InternalServerError.
-type N500InternalServerError = ErrorResponse
+// Unauthorized defines model for Unauthorized.
+type Unauthorized = ErrorResponse
 
 // RefreshTokenParams defines parameters for RefreshToken.
 type RefreshTokenParams struct {
