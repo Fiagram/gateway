@@ -24,9 +24,10 @@ const (
 
 // AccessTokenResponse defines model for AccessTokenResponse.
 type AccessTokenResponse struct {
-	// AccessToken JWT access token (store in memory; avoid localStorage if possible)
-	AccessToken string `json:"accessToken"`
-	ExpiresIn   int    `json:"expiresIn"`
+	ExpiresInSecs int `json:"expiresInSecs"`
+
+	// Token JWT access token (store in memory; avoid localStorage if possible)
+	Token string `json:"token"`
 }
 
 // Account defines model for Account.
@@ -73,12 +74,12 @@ type Role string
 
 // SigninRequest defines model for SigninRequest.
 type SigninRequest struct {
+	// IsRememberMe If true, server may issue longer refresh token lifetime.
+	IsRememberMe *bool `json:"isRememberMe,omitempty"`
+
 	// Password 8-72 characters, including at least one uppercase, one lowercase, one digit, and one special character; no whitespace.
 	Password *Password `json:"password,omitempty"`
-
-	// RememberMe If true, server may issue longer refresh token lifetime.
-	RememberMe *bool    `json:"rememberMe,omitempty"`
-	Username   Username `json:"username"`
+	Username Username  `json:"username"`
 }
 
 // SigninResponse defines model for SigninResponse.
@@ -144,8 +145,8 @@ type SignOutParams struct {
 	XRefreshToken string `json:"X-Refresh-Token"`
 }
 
-// SingInJSONRequestBody defines body for SingIn for application/json ContentType.
-type SingInJSONRequestBody = SigninRequest
+// SignInJSONRequestBody defines body for SignIn for application/json ContentType.
+type SignInJSONRequestBody = SigninRequest
 
 // SignOutJSONRequestBody defines body for SignOut for application/json ContentType.
 type SignOutJSONRequestBody = SignoutRequest
@@ -160,7 +161,7 @@ type ServerInterface interface {
 	RefreshToken(c *gin.Context, params RefreshTokenParams)
 	// Sign in
 	// (POST /auth/signin)
-	SingIn(c *gin.Context)
+	SignIn(c *gin.Context)
 	// Sign out and revoke refresh token
 	// (POST /auth/signout)
 	SignOut(c *gin.Context, params SignOutParams)
@@ -223,8 +224,8 @@ func (siw *ServerInterfaceWrapper) RefreshToken(c *gin.Context) {
 	siw.Handler.RefreshToken(c, params)
 }
 
-// SingIn operation middleware
-func (siw *ServerInterfaceWrapper) SingIn(c *gin.Context) {
+// SignIn operation middleware
+func (siw *ServerInterfaceWrapper) SignIn(c *gin.Context) {
 
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
@@ -233,7 +234,7 @@ func (siw *ServerInterfaceWrapper) SingIn(c *gin.Context) {
 		}
 	}
 
-	siw.Handler.SingIn(c)
+	siw.Handler.SignIn(c)
 }
 
 // SignOut operation middleware
@@ -336,7 +337,7 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	}
 
 	router.POST(options.BaseURL+"/auth/refresh", wrapper.RefreshToken)
-	router.POST(options.BaseURL+"/auth/signin", wrapper.SingIn)
+	router.POST(options.BaseURL+"/auth/signin", wrapper.SignIn)
 	router.POST(options.BaseURL+"/auth/signout", wrapper.SignOut)
 	router.POST(options.BaseURL+"/auth/signup", wrapper.SignUp)
 	router.GET(options.BaseURL+"/users/me", wrapper.GetMe)

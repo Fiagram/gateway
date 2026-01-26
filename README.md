@@ -9,6 +9,8 @@
 
 # Todo list
 - [x] Integrate FX framework
+- [ ] Add middleware layers to http server
+- [ ] 
 
 # Introduction
 - A gateway for microservices.

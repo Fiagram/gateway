@@ -60,7 +60,7 @@ paths:
       summary: Sign in
       description: |
         Validates credentials, sets refresh token to cookie, returns access token in body.
-      operationId: singIn
+      operationId: signIn
       security: [] # public endpoint
       requestBody:
         required: true
@@ -81,6 +81,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SigninResponse"
+        "500": { $ref: "#/components/responses/InternalServerError" }
         "400": { $ref: "#/components/responses/BadRequest" }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
@@ -332,13 +333,13 @@ components:
     AccessTokenResponse:
       type: object
       additionalProperties: false
-      required: [accessToken, tokenType, expiresIn]
+      required: [token, expiresInSecs]
       properties:
-        accessToken:
+        token:
           type: string
           description: JWT access token (store in memory; avoid localStorage if possible)
           example: eyJhbGciOi...
-        expiresIn:
+        expiresInSecs:
           type: integer
           minimum: 1
           example: 900
@@ -360,7 +361,7 @@ components:
           $ref: "#/components/schemas/Username"
         password:
           $ref: "#/components/schemas/Password"
-        rememberMe:
+        isRememberMe:
           type: boolean
           default: false
           description: If true, server may issue longer refresh token lifetime.

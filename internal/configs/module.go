@@ -9,6 +9,8 @@ var Module = fx.Module(
 		GetConfigHttp,
 		GetConfigLog,
 		GetConfigCache,
-		GetConfigAccountService,
+		GetConfigGrpcAccountService,
+		GetConfigAuth,
+		GetConfigAuthToken,
 	),
 )

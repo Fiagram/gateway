@@ -102,8 +102,11 @@ vendor:
 
 .PHONY: test
 test:
-	go test -v ./test/dataaccess/cache/ \
-			./test/dataaccess/account_service
+	go test -v ./test/dataaccess/cache/redis \
+			./test/dataaccess/account_service \
+			./test/configs \
+			./test/logic/auth 
+
 
 .PHONY: lint
 lint:

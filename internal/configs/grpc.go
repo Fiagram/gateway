@@ -9,6 +9,6 @@ type AccountService struct {
 	Port    string `yaml:"port"`
 }
 
-func GetConfigAccountService(c Config) AccountService {
+func GetConfigGrpcAccountService(c Config) AccountService {
 	return c.Grpc.AccountService
 }

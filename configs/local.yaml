@@ -15,7 +15,11 @@ cache:
   password: ""
 
 auth:
-  accessToken:
-    expiresIn: 24h
+  token:
+    secret: "secret_token_in_here"
+    accessTokenTTL: 15m
+    refreshTokenTTL: 24h
+    refreshTokenLongTTL: 720h
+
 log:
   level: debug
