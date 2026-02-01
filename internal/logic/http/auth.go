@@ -14,31 +14,97 @@ import (
 	"go.uber.org/zap"
 )
 
-// Refresh access token using refresh token
-// (POST /auth/refresh)
-func (o *oapiLogic) RefreshToken(c *gin.Context, params oapi.RefreshTokenParams) {
-	// logger := log.LoggerWithContext(c, o.logger)
+func (o *oapiLogic) RefreshToken(c *gin.Context) {
+	logger := log.LoggerWithContext(c, o.logger)
 
-	// token, err := c.Cookie("refresh_token")
-	// if err != nil {
-	// 	errMsg := "failed to get the refresh token"
-	// 	logger.With(zap.Error(err)).Error(errMsg)
-	// 	c.JSON(http.StatusUnauthorized, oapi.Unauthorized{
-	// 		Code:    "Unauthorized",
-	// 		Message: errMsg,
-	// 	})
-	// 	return
-	// }
+	// Extract refresh token from header
+	refreshToken, err := c.Cookie("refresh_token")
+	if err != nil || strings.TrimSpace(refreshToken) == "" {
+		errMsg := "refresh token is required"
+		logger.Error(errMsg)
+		c.JSON(http.StatusBadRequest, oapi.BadRequest{
+			Code:    "BadRequest",
+			Message: errMsg,
+		})
+		return
+	}
 
-	// // check token
+	// Get account ID from refresh token cache
+	accountId, err := o.refreshTokenCache.Get(c, refreshToken)
+	if err != nil || accountId == 0 {
+		errMsg := "invalid or expired refresh token"
+		logger.With(zap.Error(err)).Error(errMsg)
+		c.JSON(http.StatusUnauthorized, oapi.Unauthorized{
+			Code:    "Unauthorized",
+			Message: errMsg,
+		})
+		return
+	}
 
-	// c.JSON(http.StatusOK, oapi.RefreshResponse{
-	// 	AccessToken: oapi.AccessTokenResponse{
-	// 		Token:     "...",
-	// 		ExpiresAt: 9999,
-	// 	},
-	// 	Username: "xxx",
-	// })
+	// Create a new access token
+	accessToken, accessTokenExpiresAt, err := o.tokenLogic.GenerateAccessToken(c, auth_logic.TokenPayload{
+		AccountId: accountId,
+	})
+	if err != nil {
+		errMsg := "failed to generate access token"
+		logger.With(zap.Error(err)).Error(errMsg)
+		c.JSON(http.StatusInternalServerError, oapi.InternalServerError{
+			Code:    "InternalServerError",
+			Message: errMsg,
+		})
+		return
+	}
+
+	// Generate new refresh token (rotation)
+	newRefreshToken, newRefreshTokenExpiresAt, err := o.tokenLogic.GenerateRefreshToken(c)
+	if err != nil {
+		errMsg := "failed to generate refresh token"
+		logger.With(zap.Error(err)).Error(errMsg)
+		c.JSON(http.StatusInternalServerError, oapi.InternalServerError{
+			Code:    "InternalServerError",
+			Message: errMsg,
+		})
+		return
+	}
+
+	// Save the new refresh token to cache
+	err = o.refreshTokenCache.Set(c, newRefreshToken, accountId, o.authConfig.Token.RefreshTokenTTL)
+	if err != nil {
+		errMsg := "failed to save refresh token"
+		logger.With(zap.Error(err)).Error(errMsg)
+		c.JSON(http.StatusInternalServerError, oapi.InternalServerError{
+			Code:    "InternalServerError",
+			Message: errMsg,
+		})
+		return
+	}
+
+	// Revoke old refresh token
+	if _, err := o.refreshTokenCache.Del(c, refreshToken); err != nil {
+		logger.With(zap.Error(err)).Error("failed to revoke old refresh token")
+		// Continue anyway, not a critical error
+	}
+
+	// Return the refresh token to cookie
+	http.SetCookie(c.Writer, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    newRefreshToken,
+		Path:     "/api/v1/auth/token",
+		Domain:   "localhost",
+		Expires:  newRefreshTokenExpiresAt,
+		MaxAge:   int(time.Until(newRefreshTokenExpiresAt).Seconds()),
+		Secure:   true,
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+	})
+
+	// Return the new access token in response
+	c.JSON(http.StatusOK, oapi.RefreshResponse{
+		AccessToken: oapi.AccessTokenResponse{
+			Token: accessToken,
+			Exp:   utils.Ptr(accessTokenExpiresAt.Unix()),
+		},
+	})
 }
 
 func (o *oapiLogic) SignIn(c *gin.Context) {
@@ -137,29 +203,67 @@ func (o *oapiLogic) SignIn(c *gin.Context) {
 	}
 
 	// Return the refresh token to cookie
-	c.SetSameSite(http.SameSiteNoneMode)
-	c.SetCookie(
-		"refresh_token",
-		refreshToken,
-		int(time.Until(refreshTokenExpiresAt).Seconds()),
-		"/auth/refresh",
-		"localhost:8080",
-		true,
-		true,
-	)
+	http.SetCookie(c.Writer, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    refreshToken,
+		Path:     "/api/v1/auth/token",
+		Domain:   "localhost",
+		Expires:  refreshTokenExpiresAt,
+		MaxAge:   int(time.Until(refreshTokenExpiresAt).Seconds()),
+		Secure:   true,
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+	})
 
 	// Return the access token to the response
 	c.JSON(http.StatusOK, oapi.SigninResponse{
 		AccessToken: oapi.AccessTokenResponse{
-			Token:         accessToken,
-			ExpiresInSecs: int(time.Until(accessTokenExpiresAt).Seconds()),
+			Token: accessToken,
+			Exp:   utils.Ptr(accessTokenExpiresAt.Unix()),
 		},
-		Username: username,
 	})
 }
 
-func (o *oapiLogic) SignOut(c *gin.Context, params oapi.SignOutParams) {
-	// logger := utils.LoggerWithContext(c, o.logger).With(zap.Any("account", acc))
+func (o *oapiLogic) SignOut(c *gin.Context) {
+	logger := log.LoggerWithContext(c, o.logger)
+
+	// Extract refresh token from header
+	refreshToken, err := c.Cookie("refresh_token")
+	if err != nil || strings.TrimSpace(refreshToken) == "" {
+		errMsg := "refresh token is required"
+		logger.Error(errMsg)
+		c.JSON(http.StatusBadRequest, oapi.BadRequest{
+			Code:    "BadRequest",
+			Message: errMsg,
+		})
+		return
+	}
+
+	// Revoke the refresh token from cache
+	isDone, err := o.refreshTokenCache.Del(c, refreshToken)
+	if err != nil || isDone == false {
+		errMsg := "failed to revoke refresh token"
+		logger.With(zap.Error(err)).Error(errMsg)
+		c.JSON(http.StatusInternalServerError, oapi.InternalServerError{
+			Code:    "InternalServerError",
+			Message: errMsg,
+		})
+		return
+	}
+
+	// Return the refresh token to cookie
+	http.SetCookie(c.Writer, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    "",
+		Path:     "/api/v1/auth/token",
+		Domain:   "localhost",
+		MaxAge:   -1,
+		Secure:   true,
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+	})
+
+	c.Status(http.StatusNoContent)
 }
 
 func (o *oapiLogic) SignUp(c *gin.Context) {
@@ -229,8 +333,65 @@ func (o *oapiLogic) SignUp(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, oapi.SignupResponse{
-		Username: username,
+	// Create a new access token
+	accessToken, accessTokenExpiresAt, err := o.tokenLogic.GenerateAccessToken(c, auth_logic.TokenPayload{
+		AccountId: accResp.AccountId,
+	})
+	if err != nil {
+		errMsg := "failed to gen access token"
+		logger.With(zap.Error(err)).Error(errMsg)
+		c.JSON(http.StatusInternalServerError, oapi.InternalServerError{
+			Code:    "InternalServerError",
+			Message: errMsg,
+		})
+		return
+	}
+
+	// Create refresh token
+	refreshToken, refreshTokenExpiresAt, err := o.tokenLogic.GenerateRefreshToken(c)
+	if err != nil {
+		errMsg := "failed to gen refresh token"
+		logger.With(zap.Error(err)).Error(errMsg)
+		c.JSON(http.StatusInternalServerError, oapi.InternalServerError{
+			Code:    "InternalServerError",
+			Message: errMsg,
+		})
+		return
+	}
+
+	// Save the refresh token to the redis
+	err = o.refreshTokenCache.Set(c,
+		refreshToken, accResp.AccountId,
+		o.authConfig.Token.RefreshTokenTTL)
+	if err != nil {
+		errMsg := "failed to save refresh token"
+		logger.With(zap.Error(err)).Error(errMsg)
+		c.JSON(http.StatusInternalServerError, oapi.InternalServerError{
+			Code:    "InternalServerError",
+			Message: errMsg,
+		})
+		return
+	}
+
+	// Return the refresh token to cookie
+	http.SetCookie(c.Writer, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    refreshToken,
+		Path:     "/api/v1/auth/token",
+		Domain:   "localhost",
+		Expires:  refreshTokenExpiresAt,
+		MaxAge:   int(time.Until(refreshTokenExpiresAt).Seconds()),
+		Secure:   true,
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+	})
+
+	// Return the access token to the response
+	c.JSON(http.StatusOK, oapi.SigninResponse{
+		AccessToken: oapi.AccessTokenResponse{
+			Token: accessToken,
+			Exp:   utils.Ptr(accessTokenExpiresAt.Unix()),
+		},
 	})
 }
 

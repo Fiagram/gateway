@@ -4,15 +4,12 @@
 package oapi
 
 import (
-	"fmt"
-	"net/http"
-
 	"github.com/gin-gonic/gin"
-	"github.com/oapi-codegen/runtime"
 )
 
 const (
-	BearerAuthScopes = "bearerAuth.Scopes"
+	RefreshTokenCookieScopes = "RefreshTokenCookie.Scopes"
+	BearerAuthScopes         = "bearerAuth.Scopes"
 )
 
 // Defines values for Role.
@@ -24,7 +21,8 @@ const (
 
 // AccessTokenResponse defines model for AccessTokenResponse.
 type AccessTokenResponse struct {
-	ExpiresInSecs int `json:"expiresInSecs"`
+	// Exp Unix timestamp (seconds since epoch) when the access token expires.
+	Exp *int64 `json:"exp,omitempty"`
 
 	// Token JWT access token (store in memory; avoid localStorage if possible)
 	Token string `json:"token"`
@@ -66,7 +64,6 @@ type PhoneNumber struct {
 // RefreshResponse defines model for RefreshResponse.
 type RefreshResponse struct {
 	AccessToken AccessTokenResponse `json:"accessToken"`
-	Username    Username            `json:"username"`
 }
 
 // Role defines model for Role.
@@ -85,13 +82,6 @@ type SigninRequest struct {
 // SigninResponse defines model for SigninResponse.
 type SigninResponse struct {
 	AccessToken AccessTokenResponse `json:"accessToken"`
-	Username    Username            `json:"username"`
-}
-
-// SignoutRequest defines model for SignoutRequest.
-type SignoutRequest struct {
-	// IsRevoked Revoked sessions for this user
-	IsRevoked bool `json:"isRevoked"`
 }
 
 // SignupRequest defines model for SignupRequest.
@@ -104,7 +94,7 @@ type SignupRequest struct {
 
 // SignupResponse defines model for SignupResponse.
 type SignupResponse struct {
-	Username Username `json:"username"`
+	AccessToken AccessTokenResponse `json:"accessToken"`
 }
 
 // Username defines model for Username.
@@ -133,41 +123,26 @@ type TooManyRequests = ErrorResponse
 // Unauthorized defines model for Unauthorized.
 type Unauthorized = ErrorResponse
 
-// RefreshTokenParams defines parameters for RefreshToken.
-type RefreshTokenParams struct {
-	// XRefreshToken refresh token header
-	XRefreshToken string `json:"X-Refresh-Token"`
-}
-
-// SignOutParams defines parameters for SignOut.
-type SignOutParams struct {
-	// XRefreshToken Refresh token to revoke (if not using cookie/body).
-	XRefreshToken string `json:"X-Refresh-Token"`
-}
-
 // SignInJSONRequestBody defines body for SignIn for application/json ContentType.
 type SignInJSONRequestBody = SigninRequest
-
-// SignOutJSONRequestBody defines body for SignOut for application/json ContentType.
-type SignOutJSONRequestBody = SignoutRequest
 
 // SignUpJSONRequestBody defines body for SignUp for application/json ContentType.
 type SignUpJSONRequestBody = SignupRequest
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
-	// Refresh access token using refresh token
-	// (POST /auth/refresh)
-	RefreshToken(c *gin.Context, params RefreshTokenParams)
 	// Sign in
 	// (POST /auth/signin)
 	SignIn(c *gin.Context)
-	// Sign out and revoke refresh token
-	// (POST /auth/signout)
-	SignOut(c *gin.Context, params SignOutParams)
 	// Sign up a new account
 	// (POST /auth/signup)
 	SignUp(c *gin.Context)
+	// Refresh access token using refresh token
+	// (POST /auth/token/refresh)
+	RefreshToken(c *gin.Context)
+	// Sign out and revoke refresh token
+	// (POST /auth/token/signout)
+	SignOut(c *gin.Context)
 	// Get current user information
 	// (GET /users/me)
 	GetMe(c *gin.Context)
@@ -182,48 +157,6 @@ type ServerInterfaceWrapper struct {
 
 type MiddlewareFunc func(c *gin.Context)
 
-// RefreshToken operation middleware
-func (siw *ServerInterfaceWrapper) RefreshToken(c *gin.Context) {
-
-	var err error
-
-	// Parameter object where we will unmarshal all parameters from the context
-	var params RefreshTokenParams
-
-	headers := c.Request.Header
-
-	// ------------- Required header parameter "X-Refresh-Token" -------------
-	if valueList, found := headers[http.CanonicalHeaderKey("X-Refresh-Token")]; found {
-		var XRefreshToken string
-		n := len(valueList)
-		if n != 1 {
-			siw.ErrorHandler(c, fmt.Errorf("Expected one value for X-Refresh-Token, got %d", n), http.StatusBadRequest)
-			return
-		}
-
-		err = runtime.BindStyledParameterWithOptions("simple", "X-Refresh-Token", valueList[0], &XRefreshToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true})
-		if err != nil {
-			siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter X-Refresh-Token: %w", err), http.StatusBadRequest)
-			return
-		}
-
-		params.XRefreshToken = XRefreshToken
-
-	} else {
-		siw.ErrorHandler(c, fmt.Errorf("Header parameter X-Refresh-Token is required, but not found"), http.StatusBadRequest)
-		return
-	}
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		middleware(c)
-		if c.IsAborted() {
-			return
-		}
-	}
-
-	siw.Handler.RefreshToken(c, params)
-}
-
 // SignIn operation middleware
 func (siw *ServerInterfaceWrapper) SignIn(c *gin.Context) {
 
@@ -237,50 +170,6 @@ func (siw *ServerInterfaceWrapper) SignIn(c *gin.Context) {
 	siw.Handler.SignIn(c)
 }
 
-// SignOut operation middleware
-func (siw *ServerInterfaceWrapper) SignOut(c *gin.Context) {
-
-	var err error
-
-	c.Set(BearerAuthScopes, []string{})
-
-	// Parameter object where we will unmarshal all parameters from the context
-	var params SignOutParams
-
-	headers := c.Request.Header
-
-	// ------------- Required header parameter "X-Refresh-Token" -------------
-	if valueList, found := headers[http.CanonicalHeaderKey("X-Refresh-Token")]; found {
-		var XRefreshToken string
-		n := len(valueList)
-		if n != 1 {
-			siw.ErrorHandler(c, fmt.Errorf("Expected one value for X-Refresh-Token, got %d", n), http.StatusBadRequest)
-			return
-		}
-
-		err = runtime.BindStyledParameterWithOptions("simple", "X-Refresh-Token", valueList[0], &XRefreshToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true})
-		if err != nil {
-			siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter X-Refresh-Token: %w", err), http.StatusBadRequest)
-			return
-		}
-
-		params.XRefreshToken = XRefreshToken
-
-	} else {
-		siw.ErrorHandler(c, fmt.Errorf("Header parameter X-Refresh-Token is required, but not found"), http.StatusBadRequest)
-		return
-	}
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		middleware(c)
-		if c.IsAborted() {
-			return
-		}
-	}
-
-	siw.Handler.SignOut(c, params)
-}
-
 // SignUp operation middleware
 func (siw *ServerInterfaceWrapper) SignUp(c *gin.Context) {
 
@@ -292,6 +181,38 @@ func (siw *ServerInterfaceWrapper) SignUp(c *gin.Context) {
 	}
 
 	siw.Handler.SignUp(c)
+}
+
+// RefreshToken operation middleware
+func (siw *ServerInterfaceWrapper) RefreshToken(c *gin.Context) {
+
+	c.Set(RefreshTokenCookieScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.RefreshToken(c)
+}
+
+// SignOut operation middleware
+func (siw *ServerInterfaceWrapper) SignOut(c *gin.Context) {
+
+	c.Set(BearerAuthScopes, []string{})
+
+	c.Set(RefreshTokenCookieScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.SignOut(c)
 }
 
 // GetMe operation middleware
@@ -336,9 +257,9 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 		ErrorHandler:       errorHandler,
 	}
 
-	router.POST(options.BaseURL+"/auth/refresh", wrapper.RefreshToken)
 	router.POST(options.BaseURL+"/auth/signin", wrapper.SignIn)
-	router.POST(options.BaseURL+"/auth/signout", wrapper.SignOut)
 	router.POST(options.BaseURL+"/auth/signup", wrapper.SignUp)
+	router.POST(options.BaseURL+"/auth/token/refresh", wrapper.RefreshToken)
+	router.POST(options.BaseURL+"/auth/token/signout", wrapper.SignOut)
 	router.GET(options.BaseURL+"/users/me", wrapper.GetMe)
 }

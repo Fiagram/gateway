@@ -41,10 +41,10 @@ paths:
           headers:
             Set-Cookie:
               description: |
-                Sets `refresh_token=<opaque>; HttpOnly; Secure; Path=/v1/auth; SameSite=Lax(or None)`.
-                Server may also set `refresh_token_id` or similar for rotation tracking.
+                Sets `refresh_token=<opaque>; HttpOnly; Secure; Path=/api/v1/auth/token; SameSite=Lax`.
               schema:
                 type: string
+                pattern: "^refresh_token="
           content:
             application/json:
               schema:
@@ -74,9 +74,10 @@ paths:
           headers:
             Set-Cookie:
               description: |
-                Sets `refresh_token=<opaque>; HttpOnly; Secure; Path=/v1/auth; SameSite=Lax(or None)`.
+                Sets `refresh_token=<opaque>; HttpOnly; Secure; Path=/api/v1/auth/token; SameSite=Lax`.
               schema:
                 type: string
+                pattern: "^refresh_token="
           content:
             application/json:
               schema:
@@ -87,30 +88,26 @@ paths:
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "404": { $ref: "#/components/responses/NotFound" }
 
-  /auth/refresh:
+  /auth/token/refresh:
     post:
       tags: [Auth]
       summary: Refresh access token using refresh token
-      description:
+      description: |
         Use a refresh token to obtain a new access token. Server MAY rotate refresh tokens.
         Refresh token can be provided via HttpOnly cookie.
       operationId: refreshToken
-      security: [] # public in the sense it doesn't require access token; it requires refresh token
-      parameters:
-        - name: X-Refresh-Token
-          in: header
-          required: true
-          description: refresh token header
-          schema:
-            type: string
+      security:
+        - RefreshTokenCookie: []
       responses:
         "200":
           description: Tokens refreshed
           headers:
             Set-Cookie:
-              description: New refresh token
+              description: |
+                Sets `refresh_token=<opaque>; HttpOnly; Secure; Path=/api/v1/auth/token; SameSite=Lax`.
               schema:
                 type: string
+                pattern: "^refresh_token="
           content:
             application/json:
               schema:
@@ -119,7 +116,7 @@ paths:
         "401": { $ref: "#/components/responses/Unauthorized" }
         "404": { $ref: "#/components/responses/NotFound" }
 
-  /auth/signout:
+  /auth/token/signout:
     post:
       tags: [Auth]
       summary: Sign out and revoke refresh token
@@ -129,19 +126,7 @@ paths:
       operationId: signOut
       security:
         - bearerAuth: []
-      parameters:
-        - name: X-Refresh-Token
-          in: header
-          required: true
-          description: Refresh token to revoke (if not using cookie/body).
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/SignoutRequest"
+        - RefreshTokenCookie: []
       responses:
         "204":
           description: Signed out successfully
@@ -173,6 +158,10 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+    RefreshTokenCookie:
+      type: apiKey
+      in: cookie
+      name: refresh_token
 
   parameters:
     Limit:
@@ -339,18 +328,21 @@ components:
           type: string
           description: JWT access token (store in memory; avoid localStorage if possible)
           example: eyJhbGciOi...
-        expiresInSecs:
+        exp:
           type: integer
+          format: int64
           minimum: 1
-          example: 900
+          description: >
+            Unix timestamp (seconds since epoch) when the access token expires.
+          example: 1706812800
 
     SignupResponse:
       type: object
       additionalProperties: false
-      required: [username, accessToken]
+      required: [accessToken]
       properties:
-        username:
-          $ref: "#/components/schemas/Username"
+        accessToken:
+          $ref: "#/components/schemas/AccessTokenResponse"
 
     SigninRequest:
       type: object
@@ -369,32 +361,18 @@ components:
     SigninResponse:
       type: object
       additionalProperties: false
-      required: [username, accessToken]
+      required: [accessToken]
       properties:
-        username:
-          $ref: "#/components/schemas/Username"
         accessToken:
           $ref: "#/components/schemas/AccessTokenResponse"
 
     RefreshResponse:
       type: object
       additionalProperties: false
-      required: [username, accessToken]
+      required: [accessToken]
       properties:
-        username:
-          $ref: "#/components/schemas/Username"
         accessToken:
           $ref: "#/components/schemas/AccessTokenResponse"
-
-    SignoutRequest:
-      type: object
-      additionalProperties: false
-      required: [isRevoked]
-      properties:
-        isRevoked:
-          type: boolean
-          default: false
-          description: Revoked sessions for this user
 
     # -------------------------------- Users
     UsersMeResponse:
