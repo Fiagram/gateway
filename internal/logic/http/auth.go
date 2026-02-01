@@ -90,7 +90,7 @@ func (o *oapiLogic) RefreshToken(c *gin.Context) {
 		Name:     "refresh_token",
 		Value:    newRefreshToken,
 		Path:     "/api/v1/auth/token",
-		Domain:   "localhost",
+		Domain:   o.authConfig.Domain,
 		Expires:  newRefreshTokenExpiresAt,
 		MaxAge:   int(time.Until(newRefreshTokenExpiresAt).Seconds()),
 		Secure:   true,
@@ -207,7 +207,7 @@ func (o *oapiLogic) SignIn(c *gin.Context) {
 		Name:     "refresh_token",
 		Value:    refreshToken,
 		Path:     "/api/v1/auth/token",
-		Domain:   "localhost",
+		Domain:   o.authConfig.Domain,
 		Expires:  refreshTokenExpiresAt,
 		MaxAge:   int(time.Until(refreshTokenExpiresAt).Seconds()),
 		Secure:   true,
@@ -256,7 +256,7 @@ func (o *oapiLogic) SignOut(c *gin.Context) {
 		Name:     "refresh_token",
 		Value:    "",
 		Path:     "/api/v1/auth/token",
-		Domain:   "localhost",
+		Domain:   o.authConfig.Domain,
 		MaxAge:   -1,
 		Secure:   true,
 		HttpOnly: true,
@@ -378,7 +378,7 @@ func (o *oapiLogic) SignUp(c *gin.Context) {
 		Name:     "refresh_token",
 		Value:    refreshToken,
 		Path:     "/api/v1/auth/token",
-		Domain:   "localhost",
+		Domain:   o.authConfig.Domain,
 		Expires:  refreshTokenExpiresAt,
 		MaxAge:   int(time.Until(refreshTokenExpiresAt).Seconds()),
 		Secure:   true,
@@ -393,8 +393,4 @@ func (o *oapiLogic) SignUp(c *gin.Context) {
 			Exp:   utils.Ptr(accessTokenExpiresAt.Unix()),
 		},
 	})
-}
-
-func (o *oapiLogic) GetMe(c *gin.Context) {
-
 }

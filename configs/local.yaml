@@ -2,6 +2,14 @@ http:
   address: 0.0.0.0
   port: 8080
 
+auth:
+  domain: localhost
+  token:
+    secret: "secret_token_in_here"
+    accessTokenTTL: 15m
+    refreshTokenTTL: 24h
+    refreshTokenLongTTL: 720h
+
 grpc:
   account_service:
     address: 127.0.0.1
@@ -13,13 +21,6 @@ cache:
   port: 6379
   username: ""
   password: ""
-
-auth:
-  token:
-    secret: "secret_token_in_here"
-    accessTokenTTL: 15m
-    refreshTokenTTL: 24h
-    refreshTokenLongTTL: 720h
 
 log:
   level: debug

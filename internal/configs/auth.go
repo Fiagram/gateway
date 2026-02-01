@@ -3,7 +3,8 @@ package configs
 import "time"
 
 type Auth struct {
-	Token Token `yaml:"token"`
+	Domain string `yaml:"domain"`
+	Token  Token  `yaml:"token"`
 }
 
 type Token struct {
