@@ -19,14 +19,16 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AccountService_CreateAccount_FullMethodName     = "/fiagram.account_service.AccountService/CreateAccount"
-	AccountService_CheckAccountValid_FullMethodName = "/fiagram.account_service.AccountService/CheckAccountValid"
-	AccountService_IsUsernameTaken_FullMethodName   = "/fiagram.account_service.AccountService/IsUsernameTaken"
-	AccountService_GetAccount_FullMethodName        = "/fiagram.account_service.AccountService/GetAccount"
-	AccountService_GetAccountAll_FullMethodName     = "/fiagram.account_service.AccountService/GetAccountAll"
-	AccountService_GetAccountList_FullMethodName    = "/fiagram.account_service.AccountService/GetAccountList"
-	AccountService_UpdateAccount_FullMethodName     = "/fiagram.account_service.AccountService/UpdateAccount"
-	AccountService_DeleteAccount_FullMethodName     = "/fiagram.account_service.AccountService/DeleteAccount"
+	AccountService_CreateAccount_FullMethodName           = "/fiagram.account_service.AccountService/CreateAccount"
+	AccountService_CheckAccountValid_FullMethodName       = "/fiagram.account_service.AccountService/CheckAccountValid"
+	AccountService_IsUsernameTaken_FullMethodName         = "/fiagram.account_service.AccountService/IsUsernameTaken"
+	AccountService_GetAccount_FullMethodName              = "/fiagram.account_service.AccountService/GetAccount"
+	AccountService_GetAccountAll_FullMethodName           = "/fiagram.account_service.AccountService/GetAccountAll"
+	AccountService_GetAccountList_FullMethodName          = "/fiagram.account_service.AccountService/GetAccountList"
+	AccountService_UpdateAccountInfo_FullMethodName       = "/fiagram.account_service.AccountService/UpdateAccountInfo"
+	AccountService_UpdateAccountPassword_FullMethodName   = "/fiagram.account_service.AccountService/UpdateAccountPassword"
+	AccountService_DeleteAccount_FullMethodName           = "/fiagram.account_service.AccountService/DeleteAccount"
+	AccountService_DeleteAccountByUsername_FullMethodName = "/fiagram.account_service.AccountService/DeleteAccountByUsername"
 )
 
 // AccountServiceClient is the client API for AccountService service.
@@ -39,8 +41,10 @@ type AccountServiceClient interface {
 	GetAccount(ctx context.Context, in *GetAccountRequest, opts ...grpc.CallOption) (*GetAccountResponse, error)
 	GetAccountAll(ctx context.Context, in *GetAccountAllRequest, opts ...grpc.CallOption) (*GetAccountAllResponse, error)
 	GetAccountList(ctx context.Context, in *GetAccountListRequest, opts ...grpc.CallOption) (*GetAccountListResponse, error)
-	UpdateAccount(ctx context.Context, in *UpdateAccountRequest, opts ...grpc.CallOption) (*UpdateAccountResponse, error)
+	UpdateAccountInfo(ctx context.Context, in *UpdateAccountInfoRequest, opts ...grpc.CallOption) (*UpdateAccountInfoResponse, error)
+	UpdateAccountPassword(ctx context.Context, in *UpdateAccountPasswordRequest, opts ...grpc.CallOption) (*UpdateAccountPasswordResponse, error)
 	DeleteAccount(ctx context.Context, in *DeleteAccountRequest, opts ...grpc.CallOption) (*DeleteAccountResponse, error)
+	DeleteAccountByUsername(ctx context.Context, in *DeleteAccountByUsernameRequest, opts ...grpc.CallOption) (*DeleteAccountByUsernameResponse, error)
 }
 
 type accountServiceClient struct {
@@ -111,10 +115,20 @@ func (c *accountServiceClient) GetAccountList(ctx context.Context, in *GetAccoun
 	return out, nil
 }
 
-func (c *accountServiceClient) UpdateAccount(ctx context.Context, in *UpdateAccountRequest, opts ...grpc.CallOption) (*UpdateAccountResponse, error) {
+func (c *accountServiceClient) UpdateAccountInfo(ctx context.Context, in *UpdateAccountInfoRequest, opts ...grpc.CallOption) (*UpdateAccountInfoResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(UpdateAccountResponse)
-	err := c.cc.Invoke(ctx, AccountService_UpdateAccount_FullMethodName, in, out, cOpts...)
+	out := new(UpdateAccountInfoResponse)
+	err := c.cc.Invoke(ctx, AccountService_UpdateAccountInfo_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *accountServiceClient) UpdateAccountPassword(ctx context.Context, in *UpdateAccountPasswordRequest, opts ...grpc.CallOption) (*UpdateAccountPasswordResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateAccountPasswordResponse)
+	err := c.cc.Invoke(ctx, AccountService_UpdateAccountPassword_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -131,6 +145,16 @@ func (c *accountServiceClient) DeleteAccount(ctx context.Context, in *DeleteAcco
 	return out, nil
 }
 
+func (c *accountServiceClient) DeleteAccountByUsername(ctx context.Context, in *DeleteAccountByUsernameRequest, opts ...grpc.CallOption) (*DeleteAccountByUsernameResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteAccountByUsernameResponse)
+	err := c.cc.Invoke(ctx, AccountService_DeleteAccountByUsername_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AccountServiceServer is the server API for AccountService service.
 // All implementations must embed UnimplementedAccountServiceServer
 // for forward compatibility.
@@ -141,8 +165,10 @@ type AccountServiceServer interface {
 	GetAccount(context.Context, *GetAccountRequest) (*GetAccountResponse, error)
 	GetAccountAll(context.Context, *GetAccountAllRequest) (*GetAccountAllResponse, error)
 	GetAccountList(context.Context, *GetAccountListRequest) (*GetAccountListResponse, error)
-	UpdateAccount(context.Context, *UpdateAccountRequest) (*UpdateAccountResponse, error)
+	UpdateAccountInfo(context.Context, *UpdateAccountInfoRequest) (*UpdateAccountInfoResponse, error)
+	UpdateAccountPassword(context.Context, *UpdateAccountPasswordRequest) (*UpdateAccountPasswordResponse, error)
 	DeleteAccount(context.Context, *DeleteAccountRequest) (*DeleteAccountResponse, error)
+	DeleteAccountByUsername(context.Context, *DeleteAccountByUsernameRequest) (*DeleteAccountByUsernameResponse, error)
 	mustEmbedUnimplementedAccountServiceServer()
 }
 
@@ -171,11 +197,17 @@ func (UnimplementedAccountServiceServer) GetAccountAll(context.Context, *GetAcco
 func (UnimplementedAccountServiceServer) GetAccountList(context.Context, *GetAccountListRequest) (*GetAccountListResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetAccountList not implemented")
 }
-func (UnimplementedAccountServiceServer) UpdateAccount(context.Context, *UpdateAccountRequest) (*UpdateAccountResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method UpdateAccount not implemented")
+func (UnimplementedAccountServiceServer) UpdateAccountInfo(context.Context, *UpdateAccountInfoRequest) (*UpdateAccountInfoResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateAccountInfo not implemented")
+}
+func (UnimplementedAccountServiceServer) UpdateAccountPassword(context.Context, *UpdateAccountPasswordRequest) (*UpdateAccountPasswordResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateAccountPassword not implemented")
 }
 func (UnimplementedAccountServiceServer) DeleteAccount(context.Context, *DeleteAccountRequest) (*DeleteAccountResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method DeleteAccount not implemented")
+}
+func (UnimplementedAccountServiceServer) DeleteAccountByUsername(context.Context, *DeleteAccountByUsernameRequest) (*DeleteAccountByUsernameResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteAccountByUsername not implemented")
 }
 func (UnimplementedAccountServiceServer) mustEmbedUnimplementedAccountServiceServer() {}
 func (UnimplementedAccountServiceServer) testEmbeddedByValue()                        {}
@@ -306,20 +338,38 @@ func _AccountService_GetAccountList_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AccountService_UpdateAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateAccountRequest)
+func _AccountService_UpdateAccountInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateAccountInfoRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AccountServiceServer).UpdateAccount(ctx, in)
+		return srv.(AccountServiceServer).UpdateAccountInfo(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: AccountService_UpdateAccount_FullMethodName,
+		FullMethod: AccountService_UpdateAccountInfo_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AccountServiceServer).UpdateAccount(ctx, req.(*UpdateAccountRequest))
+		return srv.(AccountServiceServer).UpdateAccountInfo(ctx, req.(*UpdateAccountInfoRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AccountService_UpdateAccountPassword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateAccountPasswordRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AccountServiceServer).UpdateAccountPassword(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AccountService_UpdateAccountPassword_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AccountServiceServer).UpdateAccountPassword(ctx, req.(*UpdateAccountPasswordRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -338,6 +388,24 @@ func _AccountService_DeleteAccount_Handler(srv interface{}, ctx context.Context,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AccountServiceServer).DeleteAccount(ctx, req.(*DeleteAccountRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AccountService_DeleteAccountByUsername_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteAccountByUsernameRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AccountServiceServer).DeleteAccountByUsername(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AccountService_DeleteAccountByUsername_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AccountServiceServer).DeleteAccountByUsername(ctx, req.(*DeleteAccountByUsernameRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -374,12 +442,20 @@ var AccountService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _AccountService_GetAccountList_Handler,
 		},
 		{
-			MethodName: "UpdateAccount",
-			Handler:    _AccountService_UpdateAccount_Handler,
+			MethodName: "UpdateAccountInfo",
+			Handler:    _AccountService_UpdateAccountInfo_Handler,
+		},
+		{
+			MethodName: "UpdateAccountPassword",
+			Handler:    _AccountService_UpdateAccountPassword_Handler,
 		},
 		{
 			MethodName: "DeleteAccount",
 			Handler:    _AccountService_DeleteAccount_Handler,
+		},
+		{
+			MethodName: "DeleteAccountByUsername",
+			Handler:    _AccountService_DeleteAccountByUsername_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

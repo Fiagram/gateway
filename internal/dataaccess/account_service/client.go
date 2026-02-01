@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/Fiagram/gateway/internal/configs"
+	"github.com/Fiagram/gateway/internal/generated/grpc/account_service"
 	pb "github.com/Fiagram/gateway/internal/generated/grpc/account_service"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -13,14 +14,7 @@ import (
 
 // Client is the interface for account service gRPC client operations
 type Client interface {
-	CreateAccount(ctx context.Context, req *pb.CreateAccountRequest) (*pb.CreateAccountResponse, error)
-	CheckAccountValid(ctx context.Context, req *pb.CheckAccountValidRequest) (*pb.CheckAccountValidResponse, error)
-	IsUsernameTaken(ctx context.Context, in *pb.IsUsernameTakenRequest) (*pb.IsUsernameTakenResponse, error)
-	GetAccount(ctx context.Context, req *pb.GetAccountRequest) (*pb.GetAccountResponse, error)
-	GetAccountAll(ctx context.Context, req *pb.GetAccountAllRequest) (*pb.GetAccountAllResponse, error)
-	GetAccountList(ctx context.Context, req *pb.GetAccountListRequest) (*pb.GetAccountListResponse, error)
-	UpdateAccount(ctx context.Context, req *pb.UpdateAccountRequest) (*pb.UpdateAccountResponse, error)
-	DeleteAccount(ctx context.Context, req *pb.DeleteAccountRequest) (*pb.DeleteAccountResponse, error)
+	account_service.AccountServiceClient
 	Close() error
 }
 
@@ -51,36 +45,84 @@ func NewClient(
 	}, nil
 }
 
-func (c *client) CreateAccount(ctx context.Context, req *pb.CreateAccountRequest) (*pb.CreateAccountResponse, error) {
-	return c.stub.CreateAccount(ctx, req)
+func (c *client) CreateAccount(
+	ctx context.Context,
+	in *pb.CreateAccountRequest,
+	opts ...grpc.CallOption,
+) (*pb.CreateAccountResponse, error) {
+	return c.stub.CreateAccount(ctx, in, opts...)
 }
 
-func (c *client) CheckAccountValid(ctx context.Context, req *pb.CheckAccountValidRequest) (*pb.CheckAccountValidResponse, error) {
-	return c.stub.CheckAccountValid(ctx, req)
+func (c *client) CheckAccountValid(
+	ctx context.Context,
+	in *pb.CheckAccountValidRequest,
+	opts ...grpc.CallOption,
+) (*pb.CheckAccountValidResponse, error) {
+	return c.stub.CheckAccountValid(ctx, in, opts...)
 }
 
-func (c *client) IsUsernameTaken(ctx context.Context, req *pb.IsUsernameTakenRequest) (*pb.IsUsernameTakenResponse, error) {
-	return c.stub.IsUsernameTaken(ctx, req)
+func (c *client) DeleteAccount(
+	ctx context.Context,
+	in *pb.DeleteAccountRequest,
+	opts ...grpc.CallOption,
+) (*pb.DeleteAccountResponse, error) {
+	return c.stub.DeleteAccount(ctx, in, opts...)
 }
 
-func (c *client) GetAccount(ctx context.Context, req *pb.GetAccountRequest) (*pb.GetAccountResponse, error) {
-	return c.stub.GetAccount(ctx, req)
+func (c *client) DeleteAccountByUsername(
+	ctx context.Context,
+	in *pb.DeleteAccountByUsernameRequest,
+	opts ...grpc.CallOption,
+) (*pb.DeleteAccountByUsernameResponse, error) {
+	return c.stub.DeleteAccountByUsername(ctx, in, opts...)
 }
 
-func (c *client) GetAccountAll(ctx context.Context, req *pb.GetAccountAllRequest) (*pb.GetAccountAllResponse, error) {
-	return c.stub.GetAccountAll(ctx, req)
+func (c *client) GetAccount(
+	ctx context.Context,
+	in *pb.GetAccountRequest,
+	opts ...grpc.CallOption,
+) (*pb.GetAccountResponse, error) {
+	return c.stub.GetAccount(ctx, in, opts...)
 }
 
-func (c *client) GetAccountList(ctx context.Context, req *pb.GetAccountListRequest) (*pb.GetAccountListResponse, error) {
-	return c.stub.GetAccountList(ctx, req)
+func (c *client) GetAccountAll(
+	ctx context.Context,
+	in *pb.GetAccountAllRequest,
+	opts ...grpc.CallOption,
+) (*pb.GetAccountAllResponse, error) {
+	return c.stub.GetAccountAll(ctx, in, opts...)
 }
 
-func (c *client) UpdateAccount(ctx context.Context, req *pb.UpdateAccountRequest) (*pb.UpdateAccountResponse, error) {
-	return c.stub.UpdateAccount(ctx, req)
+func (c *client) GetAccountList(
+	ctx context.Context,
+	in *pb.GetAccountListRequest,
+	opts ...grpc.CallOption,
+) (*pb.GetAccountListResponse, error) {
+	return c.stub.GetAccountList(ctx, in, opts...)
 }
 
-func (c *client) DeleteAccount(ctx context.Context, req *pb.DeleteAccountRequest) (*pb.DeleteAccountResponse, error) {
-	return c.stub.DeleteAccount(ctx, req)
+func (c *client) IsUsernameTaken(
+	ctx context.Context,
+	in *pb.IsUsernameTakenRequest,
+	opts ...grpc.CallOption,
+) (*pb.IsUsernameTakenResponse, error) {
+	return c.stub.IsUsernameTaken(ctx, in, opts...)
+}
+
+func (c *client) UpdateAccountInfo(
+	ctx context.Context,
+	in *pb.UpdateAccountInfoRequest,
+	opts ...grpc.CallOption,
+) (*pb.UpdateAccountInfoResponse, error) {
+	return c.stub.UpdateAccountInfo(ctx, in, opts...)
+}
+
+func (c *client) UpdateAccountPassword(
+	ctx context.Context,
+	in *pb.UpdateAccountPasswordRequest,
+	opts ...grpc.CallOption,
+) (*pb.UpdateAccountPasswordResponse, error) {
+	return c.stub.UpdateAccountPassword(ctx, in, opts...)
 }
 
 func (c *client) Close() error {

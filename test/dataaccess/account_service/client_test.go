@@ -21,7 +21,7 @@ func TestCreateAndDeleteAccount(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEqual(t, 0, createAccResp.AccountId)
 
-	deleteAccResp, err := client.DeleteAccount(ctx, &pb.DeleteAccountRequest{
+	deleteAccResp, err := client.DeleteAccountByUsername(ctx, &pb.DeleteAccountByUsernameRequest{
 		Username: accInfo.Username,
 	})
 	require.NoError(t, err)
@@ -49,7 +49,7 @@ func TestCheckAccountValid(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEqual(t, 0, resp2.AccountId)
 
-	deleteAccResp, err := client.DeleteAccount(ctx, &pb.DeleteAccountRequest{
+	deleteAccResp, err := client.DeleteAccountByUsername(ctx, &pb.DeleteAccountByUsernameRequest{
 		Username: accInfo.Username,
 	})
 	require.NoError(t, err)
