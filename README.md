@@ -9,8 +9,13 @@
 
 # Todo list
 - [x] Integrate FX framework
-- [ ] Add middleware layers to http server
-- [ ] 
+- [x] Add middleware layers to http server
+- [x] Implement `users` methods use middleware in gin framework
+- [ ] Complete `users` CRUD methods
+- [ ] Research NGINX to make a reverse-proxy for microservice
+- [ ] Vibe coding a webserver based on `openapi.yml`
+- [ ] Deploy the distributed system to a real domain (fiagram.com)
+- [ ] (Tech debt) Fork and rewrite openapi to add `RegisterWith<middleware_names>Mids` intent to group middlewares for convenience
 
 # Introduction
 - A gateway for microservices.

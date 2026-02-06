@@ -5,16 +5,55 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Fiagram/gateway/internal/configs"
+	account_grpc "github.com/Fiagram/gateway/internal/dataaccess/account_service"
+	"github.com/Fiagram/gateway/internal/dataaccess/cache"
 	"github.com/Fiagram/gateway/internal/generated/grpc/account_service"
 	oapi "github.com/Fiagram/gateway/internal/generated/openapi"
 	"github.com/Fiagram/gateway/internal/log"
-	auth_logic "github.com/Fiagram/gateway/internal/logic/auth"
+	token_logic "github.com/Fiagram/gateway/internal/logic/token"
 	"github.com/Fiagram/gateway/internal/utils"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
 
-func (o *oapiLogic) RefreshToken(c *gin.Context) {
+type AuthLogic interface {
+	SignIn(c *gin.Context)
+	SignUp(c *gin.Context)
+	RefreshToken(c *gin.Context)
+	SignOut(c *gin.Context)
+}
+
+var _ AuthLogic = (oapi.ServerInterface)(nil)
+
+type authLogic struct {
+	authConfig          configs.Auth
+	usernamesTakenCache cache.UsernamesTaken
+	refreshTokenCache   cache.RefreshToken
+	accountGrpc         account_grpc.Client
+	tokenLogic          token_logic.Token
+	logger              *zap.Logger
+}
+
+func NewAuthLogic(
+	authConfig configs.Auth,
+	usernamesTakenCache cache.UsernamesTaken,
+	refreshTokenCache cache.RefreshToken,
+	accountGrpc account_grpc.Client,
+	tokenLogic token_logic.Token,
+	logger *zap.Logger,
+) AuthLogic {
+	return &authLogic{
+		authConfig:          authConfig,
+		usernamesTakenCache: usernamesTakenCache,
+		refreshTokenCache:   refreshTokenCache,
+		accountGrpc:         accountGrpc,
+		tokenLogic:          tokenLogic,
+		logger:              logger,
+	}
+}
+
+func (o *authLogic) RefreshToken(c *gin.Context) {
 	logger := log.LoggerWithContext(c, o.logger)
 
 	// Extract refresh token from header
@@ -42,7 +81,7 @@ func (o *oapiLogic) RefreshToken(c *gin.Context) {
 	}
 
 	// Create a new access token
-	accessToken, accessTokenExpiresAt, err := o.tokenLogic.GenerateAccessToken(c, auth_logic.TokenPayload{
+	accessToken, accessTokenExpiresAt, err := o.tokenLogic.GenerateAccessToken(c, token_logic.TokenPayload{
 		AccountId: accountId,
 	})
 	if err != nil {
@@ -102,12 +141,12 @@ func (o *oapiLogic) RefreshToken(c *gin.Context) {
 	c.JSON(http.StatusOK, oapi.RefreshResponse{
 		AccessToken: oapi.AccessTokenResponse{
 			Token: accessToken,
-			Exp:   utils.Ptr(accessTokenExpiresAt.Unix()),
+			Exp:   accessTokenExpiresAt.Unix(),
 		},
 	})
 }
 
-func (o *oapiLogic) SignIn(c *gin.Context) {
+func (o *authLogic) SignIn(c *gin.Context) {
 	logger := log.LoggerWithContext(c, o.logger)
 
 	// Decode the incoming JSON object
@@ -160,7 +199,7 @@ func (o *oapiLogic) SignIn(c *gin.Context) {
 	}
 
 	// Create a new access token
-	accessToken, accessTokenExpiresAt, err := o.tokenLogic.GenerateAccessToken(c, auth_logic.TokenPayload{
+	accessToken, accessTokenExpiresAt, err := o.tokenLogic.GenerateAccessToken(c, token_logic.TokenPayload{
 		AccountId: validResp.AccountId,
 	})
 	if err != nil {
@@ -219,12 +258,12 @@ func (o *oapiLogic) SignIn(c *gin.Context) {
 	c.JSON(http.StatusOK, oapi.SigninResponse{
 		AccessToken: oapi.AccessTokenResponse{
 			Token: accessToken,
-			Exp:   utils.Ptr(accessTokenExpiresAt.Unix()),
+			Exp:   accessTokenExpiresAt.Unix(),
 		},
 	})
 }
 
-func (o *oapiLogic) SignOut(c *gin.Context) {
+func (o *authLogic) SignOut(c *gin.Context) {
 	logger := log.LoggerWithContext(c, o.logger)
 
 	// Extract refresh token from header
@@ -266,7 +305,7 @@ func (o *oapiLogic) SignOut(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
-func (o *oapiLogic) SignUp(c *gin.Context) {
+func (o *authLogic) SignUp(c *gin.Context) {
 	logger := log.LoggerWithContext(c, o.logger)
 
 	// Decode the incoming JSON object
@@ -334,7 +373,7 @@ func (o *oapiLogic) SignUp(c *gin.Context) {
 	}
 
 	// Create a new access token
-	accessToken, accessTokenExpiresAt, err := o.tokenLogic.GenerateAccessToken(c, auth_logic.TokenPayload{
+	accessToken, accessTokenExpiresAt, err := o.tokenLogic.GenerateAccessToken(c, token_logic.TokenPayload{
 		AccountId: accResp.AccountId,
 	})
 	if err != nil {
@@ -390,7 +429,7 @@ func (o *oapiLogic) SignUp(c *gin.Context) {
 	c.JSON(http.StatusOK, oapi.SigninResponse{
 		AccessToken: oapi.AccessTokenResponse{
 			Token: accessToken,
-			Exp:   utils.Ptr(accessTokenExpiresAt.Unix()),
+			Exp:   accessTokenExpiresAt.Unix(),
 		},
 	})
 }

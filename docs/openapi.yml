@@ -121,11 +121,10 @@ paths:
       tags: [Auth]
       summary: Sign out and revoke refresh token
       description: >
-        Revokes the refresh token (and optionally all sessions). If refresh token is stored in cookie,
+        Revokes the `refresh_token`. If `refresh_token` is stored in cookie,
         this endpoint should also clear it.
       operationId: signOut
       security:
-        - bearerAuth: []
         - RefreshTokenCookie: []
       responses:
         "204":
@@ -322,7 +321,7 @@ components:
     AccessTokenResponse:
       type: object
       additionalProperties: false
-      required: [token, expiresInSecs]
+      required: [token, exp]
       properties:
         token:
           type: string

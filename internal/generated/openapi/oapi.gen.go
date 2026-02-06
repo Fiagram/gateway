@@ -22,7 +22,7 @@ const (
 // AccessTokenResponse defines model for AccessTokenResponse.
 type AccessTokenResponse struct {
 	// Exp Unix timestamp (seconds since epoch) when the access token expires.
-	Exp *int64 `json:"exp,omitempty"`
+	Exp int64 `json:"exp"`
 
 	// Token JWT access token (store in memory; avoid localStorage if possible)
 	Token string `json:"token"`
@@ -200,8 +200,6 @@ func (siw *ServerInterfaceWrapper) RefreshToken(c *gin.Context) {
 
 // SignOut operation middleware
 func (siw *ServerInterfaceWrapper) SignOut(c *gin.Context) {
-
-	c.Set(BearerAuthScopes, []string{})
 
 	c.Set(RefreshTokenCookieScopes, []string{})
 

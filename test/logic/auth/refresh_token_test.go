@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/Fiagram/gateway/internal/configs"
-	logic "github.com/Fiagram/gateway/internal/logic/auth"
+	logic "github.com/Fiagram/gateway/internal/logic/token"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
